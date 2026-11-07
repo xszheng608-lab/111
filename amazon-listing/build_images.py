@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose four 900×600 Amazon secondary images from the product photo."""
+"""Compose four 900x600 English Amazon secondary images from the product photo."""
 
 from pathlib import Path
 
@@ -17,22 +17,16 @@ NAVY_DEEP = (10, 28, 74)
 INK = (27, 32, 46)
 MUTED = (92, 98, 114)
 YELLOW = (255, 204, 41)
-YELLOW_DEEP = (242, 176, 18)
-CREAM = (255, 250, 240)
 WHITE = (255, 255, 255)
-LINE = (232, 226, 210)
 AMBER_BG = (255, 246, 224)
-
-FONT_DIR = "/usr/share/fonts/opentype/noto"
 
 
 def font(weight: str, size: int) -> ImageFont.FreeTypeFont:
     name = {
-        "regular": "NotoSansCJK-Regular.ttc",
-        "medium": "NotoSansCJK-Medium.ttc",
-        "bold": "NotoSansCJK-Bold.ttc",
+        "regular": "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "bold": "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
     }[weight]
-    return ImageFont.truetype(f"{FONT_DIR}/{name}", size, index=2)
+    return ImageFont.truetype(name, size)
 
 
 def load_product() -> Image.Image:
@@ -88,13 +82,13 @@ def fit_paste(canvas: Image.Image, product: Image.Image, box):
 
 def header(draw: ImageDraw.ImageDraw, page: str):
     draw.rectangle((0, 0, W, 18), fill=YELLOW)
-    draw.text((64, 78), "UNICITY  ·  UNIMATE", font=font("bold", 34), fill=NAVY, anchor="lm")
+    draw.text((64, 78), "UNICITY   ·   UNIMATE", font=font("bold", 32), fill=NAVY, anchor="lm")
     label = page
-    f = font("medium", 30)
+    f = font("bold", 28)
     tw = draw.textlength(label, font=f)
-    pill = (W - 64 - tw - 44, 52, W - 64, 104)
-    rounded(draw, pill, 26, YELLOW)
-    draw.text((pill[0] + 22, 78), label, font=f, fill=NAVY_DEEP, anchor="lm")
+    pill = (W - 64 - tw - 48, 50, W - 64, 106)
+    rounded(draw, pill, 28, YELLOW)
+    draw.text((pill[0] + 24, 78), label, font=f, fill=NAVY_DEEP, anchor="lm")
 
 
 def blob(base: Image.Image, box, color):
@@ -105,6 +99,29 @@ def blob(base: Image.Image, box, color):
 
 def footer_note(draw, text, y=1142):
     draw.text((64, y), text, font=font("regular", 28), fill=MUTED, anchor="lm")
+
+
+def draw_wrap(draw, text, fnt, box, fill, line_h):
+    x0, y0, x1, y1 = box
+    max_w = x1 - x0
+    lines, buf = [], ""
+    for word in text.split():
+        trial = word if not buf else f"{buf} {word}"
+        if draw.textlength(trial, font=fnt) <= max_w:
+            buf = trial
+        else:
+            if buf:
+                lines.append(buf)
+            buf = word
+    if buf:
+        lines.append(buf)
+    y = y0
+    for line in lines:
+        if y > y1:
+            break
+        draw.text((x0, y), line, font=fnt, fill=fill)
+        y += line_h
+    return len(lines)
 
 
 def save(im: Image.Image, name: str):
@@ -119,134 +136,119 @@ def image_highlights(product: Image.Image):
     blob(im, (1280, -160, 1980, 540), (255, 214, 80, 80))
     blob(im, (-220, 860, 420, 1420), (255, 228, 140, 90))
     d = ImageDraw.Draw(im)
-    header(d, "天然柠檬味")
-    fit_paste(im, product, (20, 140, 860, 1080))
+    header(d, "Natural Lemon")
+    fit_paste(im, product, (20, 140, 820, 1080))
     d = ImageDraw.Draw(im)
-    d.text((960, 210), "超浓缩马黛茶冲饮粉", font=font("medium", 36), fill=MUTED, anchor="lm")
-    d.text((960, 300), "Unimate", font=font("bold", 92), fill=NAVY, anchor="lm")
-    d.text((960, 380), "膳食补充剂", font=font("regular", 34), fill=INK, anchor="lm")
+    d.text((900, 200), "Ultra-concentrated yerba mate", font=font("regular", 32), fill=MUTED, anchor="lm")
+    d.text((900, 292), "Unimate", font=font("bold", 84), fill=NAVY, anchor="lm")
+    d.text((900, 368), "Dietary supplement", font=font("regular", 32), fill=INK, anchor="lm")
 
     rows = [
-        ("3g", "每份马黛茶"),
-        ("0g", "每份添加糖"),
-        ("30", "独立条装"),
+        ("3g", "Yerba mate", "per serving"),
+        ("0g", "Added sugar", "per serving"),
+        ("30", "Stick packs", "in each box"),
     ]
-    y = 450
-    for num, label in rows:
-        shadow_card(im, (960, y, 1720, y + 168), 28)
+    y = 430
+    for num, title, sub in rows:
+        shadow_card(im, (900, y, 1728, y + 176), 28)
         d = ImageDraw.Draw(im)
-        rounded(d, (992, y + 24, 1112, y + 144), 22, NAVY)
-        d.text((1052, y + 84), num, font=font("bold", 48), fill=WHITE, anchor="mm")
-        d.text((1156, y + 84), label, font=font("bold", 44), fill=INK, anchor="lm")
-        y += 192
-    footer_note(d, "净含量 153 克（5.4 盎司）。数字与包装正面标示一致。")
-    save(im, "01-核心卖点.jpg")
+        rounded(d, (928, y + 28, 1064, y + 148), 22, NAVY)
+        d.text((996, y + 88), num, font=font("bold", 46), fill=WHITE, anchor="mm")
+        d.text((1100, y + 68), title, font=font("bold", 40), fill=INK, anchor="lm")
+        d.text((1100, y + 118), sub, font=font("regular", 30), fill=MUTED, anchor="lm")
+        y += 198
+    footer_note(d, "Net wt. 5.4 oz (153 g). Figures match the front of the box.")
+    save(im, "01-highlights.jpg")
 
 
 def image_prepare(product: Image.Image):
     im = new_canvas()
     blob(im, (1400, -200, 2100, 480), (255, 214, 80, 70))
     d = ImageDraw.Draw(im)
-    header(d, "冲调方法")
-    fit_paste(im, product, (10, 150, 720, 1040))
+    header(d, "How to Mix")
+    fit_paste(im, product, (10, 150, 680, 1040))
     d = ImageDraw.Draw(im)
-    d.text((780, 200), "三步冲好一杯", font=font("bold", 64), fill=NAVY, anchor="lm")
-    d.text((780, 270), "冷水或热水都可以", font=font("regular", 34), fill=MUTED, anchor="lm")
+    d.text((740, 196), "Three steps to one cup", font=font("bold", 52), fill=NAVY, anchor="lm")
+    d.text((740, 258), "Hot or cold water", font=font("regular", 32), fill=MUTED, anchor="lm")
 
     steps = [
-        ("1", "撕开一条", "取 1 条，沿封口撕开"),
-        ("2", "倒入杯中", "整条粉末一次倒入"),
-        ("3", "加水搅匀", "约 375 毫升热水或冷水"),
+        ("1", "Tear it open", "Open 1 stick pack"),
+        ("2", "Pour it in", "Empty the whole pack into a cup"),
+        ("3", "Stir to mix", "About 12 fl oz (375 mL) of water"),
     ]
-    y = 340
+    y = 320
     for num, title, body in steps:
-        shadow_card(im, (780, y, 1720, y + 210), 28)
+        shadow_card(im, (740, y, 1728, y + 220), 28)
         d = ImageDraw.Draw(im)
-        d.ellipse((820, y + 45, 940, y + 165), fill=YELLOW)
-        d.text((880, y + 105), num, font=font("bold", 54), fill=NAVY, anchor="mm")
-        d.text((980, y + 78), title, font=font("bold", 42), fill=INK, anchor="lm")
-        d.text((980, y + 138), body, font=font("regular", 32), fill=MUTED, anchor="lm")
-        y += 234
-    footer_note(d, "建议每日 1 条。水量可按口味增减，请以包装上的饮用说明为准。")
-    save(im, "02-冲调方法.jpg")
+        d.ellipse((776, y + 50, 896, y + 170), fill=YELLOW)
+        d.text((836, y + 110), num, font=font("bold", 52), fill=NAVY, anchor="mm")
+        d.text((932, y + 82), title, font=font("bold", 40), fill=INK, anchor="lm")
+        d.text((932, y + 140), body, font=font("regular", 30), fill=MUTED, anchor="lm")
+        y += 242
+    footer_note(d, "Once a day. Add more or less water to taste. Follow the package directions.")
+    save(im, "02-how-to-mix.jpg")
 
 
 def image_specs(product: Image.Image):
     im = new_canvas()
     blob(im, (-180, -160, 480, 500), (255, 220, 110, 80))
     d = ImageDraw.Draw(im)
-    header(d, "包装规格")
-    fit_paste(im, product, (20, 180, 760, 1080))
+    header(d, "Box Facts")
+    fit_paste(im, product, (10, 170, 720, 1080))
     d = ImageDraw.Draw(im)
-    d.text((820, 190), "看包装上的数字", font=font("bold", 58), fill=NAVY, anchor="lm")
-    d.text((820, 258), "与盒子正面的标示一致", font=font("regular", 32), fill=MUTED, anchor="lm")
+    d.text((780, 188), "Numbers on the box", font=font("bold", 52), fill=NAVY, anchor="lm")
+    d.text((780, 250), "Same figures as the front panel", font=font("regular", 30), fill=MUTED, anchor="lm")
 
     cells = [
-        ("3g", "每份马黛茶"),
-        ("0g", "每份添加糖"),
-        ("30", "独立条装"),
-        ("153g", "净含量"),
+        ("3g", "Yerba mate", "per serving"),
+        ("0g", "Added sugar", "per serving"),
+        ("30", "Stick packs", "in each box"),
+        ("5.4 oz", "Net weight", "153 g"),
     ]
-    positions = [(820, 320), (1260, 320), (820, 680), (1260, 680)]
-    for (num, label), (x, y) in zip(cells, positions):
-        shadow_card(im, (x, y, x + 410, y + 320), 32)
+    positions = [(780, 310), (1254, 310), (780, 680), (1254, 680)]
+    for (num, title, sub), (x, y) in zip(cells, positions):
+        shadow_card(im, (x, y, x + 444, y + 330), 32)
         d = ImageDraw.Draw(im)
-        d.text((x + 205, y + 125), num, font=font("bold", 78), fill=NAVY, anchor="mm")
-        d.text((x + 205, y + 220), label, font=font("medium", 34), fill=INK, anchor="mm")
-    footer_note(d, "5.4 盎司  ·  天然柠檬味  ·  膳食补充剂。未标出的营养数据请以实物包装为准。")
-    save(im, "03-包装规格.jpg")
+        d.text((x + 222, y + 118), num, font=font("bold", 64), fill=NAVY, anchor="mm")
+        d.text((x + 222, y + 200), title, font=font("bold", 32), fill=INK, anchor="mm")
+        d.text((x + 222, y + 248), sub, font=font("regular", 28), fill=MUTED, anchor="mm")
+    footer_note(d, "Natural lemon flavor  ·  Dietary supplement. See the package for anything not shown here.")
+    save(im, "03-box-facts.jpg")
 
 
 def image_notes(product: Image.Image):
     im = new_canvas()
-    blob(im, (1460, 80, 2050, 640), (255, 214, 80, 60))
+    blob(im, (1460, 60, 2050, 620), (255, 214, 80, 60))
     d = ImageDraw.Draw(im)
-    header(d, "饮用提示")
-    fit_paste(im, product, (0, 130, 700, 900))
+    header(d, "Good to Know")
+    fit_paste(im, product, (0, 140, 680, 900))
     d = ImageDraw.Draw(im)
-    d.text((760, 190), "每天一条，方便携带", font=font("bold", 52), fill=NAVY, anchor="lm")
+    d.text((740, 190), "One stick a day, easy to carry", font=font("bold", 42), fill=NAVY, anchor="lm")
 
     points = [
-        ("独立包装", "一盒 30 条，按次取用"),
-        ("冷热皆宜", "热水或冷水搅匀即可"),
-        ("柠檬口味", "天然柠檬味冲饮粉"),
+        ("Stick packs", "30 single-serve packs in each box"),
+        ("Hot or cold", "Stir into water until mixed"),
+        ("Lemon flavor", "Natural lemon drink mix"),
     ]
-    y = 250
+    y = 260
     for title, body in points:
         d = ImageDraw.Draw(im)
-        d.ellipse((760, y + 4, 812, y + 56), fill=YELLOW)
-        d.text((836, y + 30), title, font=font("bold", 36), fill=INK, anchor="lm")
-        d.text((1060, y + 30), body, font=font("regular", 32), fill=MUTED, anchor="lm")
-        y += 88
+        d.ellipse((740, y, 796, y + 56), fill=YELLOW)
+        d.text((824, y + 8), title, font=font("bold", 34), fill=INK, anchor="lt")
+        d.text((824, y + 48), body, font=font("regular", 28), fill=MUTED, anchor="lt")
+        y += 110
 
-    shadow_card(im, (64, 930, 1736, 1105), 28, fill=AMBER_BG)
+    shadow_card(im, (64, 930, 1736, 1110), 28, fill=AMBER_BG)
     d = ImageDraw.Draw(im)
-    d.rounded_rectangle((96, 962, 248, 1012), radius=16, fill=NAVY)
-    d.text((172, 987), "请注意", font=font("bold", 30), fill=WHITE, anchor="mm")
-    note = "本品是膳食补充剂，不能代替正餐。马黛茶含天然咖啡因。孕妇、哺乳期妇女、儿童及对咖啡因敏感者不建议使用。请按包装说明冲调，不要超量饮用。"
-    draw_wrap(d, note, font("regular", 30), (272, 968, 1690, 1084), INK, 44)
-    save(im, "04-饮用提示.jpg")
-
-
-def draw_wrap(draw, text, fnt, box, fill, line_h):
-    x0, y0, x1, y1 = box
-    max_w = x1 - x0
-    lines, buf = [], ""
-    for ch in text:
-        trial = buf + ch
-        if draw.textlength(trial, font=fnt) <= max_w:
-            buf = trial
-        else:
-            lines.append(buf)
-            buf = ch
-    if buf:
-        lines.append(buf)
-    y = y0
-    for line in lines:
-        if y > y1:
-            break
-        draw.text((x0, y), line, font=fnt, fill=fill)
-        y += line_h
+    d.rounded_rectangle((96, 978, 230, 1040), radius=16, fill=NAVY)
+    d.text((163, 1009), "Note", font=font("bold", 30), fill=WHITE, anchor="mm")
+    note = (
+        "A dietary supplement, not a meal replacement. Yerba mate contains naturally occurring caffeine. "
+        "Not for pregnant or nursing women, children, or people sensitive to caffeine. "
+        "Follow the package directions and do not exceed the suggested use."
+    )
+    draw_wrap(d, note, font("regular", 28), (258, 958, 1696, 1088), INK, 40)
+    save(im, "04-good-to-know.jpg")
 
 
 def main():
