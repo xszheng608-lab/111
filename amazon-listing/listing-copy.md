@@ -43,6 +43,4 @@ This product is a dietary supplement and is not a meal replacement. Yerba mate c
 | `images/03-box-facts.jpg` | 3 g, 0 g, 30 packs, and 5.4 oz net weight |
 | `images/04-good-to-know.jpg` | Carry case plus caffeine and who should skip it |
 
-All four files are 900×600 JPG. They do not show a price, a review claim, a gift, or a benefit that is not printed on the front of the box.
-
-Amazon zoom usually needs the long side to be at least 1,000 pixels. These files are 900×600, as requested, so zoom may not be available after upload.
+All four files are 3600×2400 JPG, the same 3:2 shape as 900×600, drawn at full size so the type stays sharp. They do not show a price, a review claim, a gift, or a benefit that is not printed on the front of the box.
